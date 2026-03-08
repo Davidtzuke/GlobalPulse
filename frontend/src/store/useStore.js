@@ -1,20 +1,3 @@
-/**
- * PLACEHOLDER - Zustand store for Global Pulse state management.
- *
- * To be implemented by Dashboard Engineer.
- *
- * State shape:
- *   - flights: Flight[]
- *   - conflicts: Conflict[]
- *   - earthquakes: Earthquake[]
- *   - news: NewsArticle[]
- *   - stats: DashboardStats
- *   - filters: { flights: bool, conflicts: bool, earthquakes: bool, news: bool }
- *   - selectedEvent: object | null
- *   - isConnected: bool (WebSocket status)
- *   - lastUpdated: Date | null
- */
-
 import { create } from 'zustand';
 
 const useStore = create((set, get) => ({
@@ -23,7 +6,7 @@ const useStore = create((set, get) => ({
   conflicts: [],
   earthquakes: [],
   news: [],
-  stats: {},
+  stats: null,
 
   // UI state
   filters: {
@@ -32,16 +15,31 @@ const useStore = create((set, get) => ({
     earthquakes: true,
     news: true,
   },
+  activeTab: 'flights',
   selectedEvent: null,
   isConnected: false,
   lastUpdated: null,
 
-  // Actions
-  setFlights: (flights) => set({ flights }),
-  setConflicts: (conflicts) => set({ conflicts }),
-  setEarthquakes: (earthquakes) => set({ earthquakes }),
-  setNews: (news) => set({ news }),
+  // Actions - Data setters
+  setFlights: (flights) => set({ flights, lastUpdated: new Date() }),
+  setConflicts: (conflicts) => set({ conflicts, lastUpdated: new Date() }),
+  setEarthquakes: (earthquakes) => set({ earthquakes, lastUpdated: new Date() }),
+  setNews: (news) => set({ news, lastUpdated: new Date() }),
   setStats: (stats) => set({ stats }),
+
+  // Bulk setter for initial load
+  setAllData: ({ flights, conflicts, earthquakes, news, stats }) =>
+    set({
+      ...(flights !== undefined && { flights }),
+      ...(conflicts !== undefined && { conflicts }),
+      ...(earthquakes !== undefined && { earthquakes }),
+      ...(news !== undefined && { news }),
+      ...(stats !== undefined && { stats }),
+      lastUpdated: new Date(),
+    }),
+
+  // UI actions
+  setActiveTab: (activeTab) => set({ activeTab }),
   toggleFilter: (key) =>
     set((state) => ({
       filters: { ...state.filters, [key]: !state.filters[key] },

@@ -1,40 +1,38 @@
-/**
- * PLACEHOLDER - API client for Global Pulse backend.
- *
- * To be implemented by Dashboard Engineer.
- * Base URL: /api (proxied to localhost:8000)
- *
- * Endpoints:
- *   GET /api/flights     - Current flight positions
- *   GET /api/conflicts   - Active conflict events
- *   GET /api/earthquakes - Recent earthquakes
- *   GET /api/news        - Trending news articles
- *   GET /api/stats       - Aggregated dashboard statistics
- */
-
 const BASE_URL = '/api';
 
+async function apiFetch(endpoint) {
+  try {
+    const res = await fetch(`${BASE_URL}${endpoint}`);
+    if (!res.ok) {
+      throw new Error(`API error ${res.status}: ${res.statusText}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error(`[API] Failed to fetch ${endpoint}:`, err);
+    return null;
+  }
+}
+
+export async function fetchAllData() {
+  return apiFetch('/data/all');
+}
+
 export async function fetchFlights() {
-  const res = await fetch(`${BASE_URL}/flights`);
-  return res.json();
+  return apiFetch('/data/flights');
 }
 
 export async function fetchConflicts() {
-  const res = await fetch(`${BASE_URL}/conflicts`);
-  return res.json();
+  return apiFetch('/data/conflicts');
 }
 
 export async function fetchEarthquakes() {
-  const res = await fetch(`${BASE_URL}/earthquakes`);
-  return res.json();
+  return apiFetch('/data/earthquakes');
 }
 
 export async function fetchNews() {
-  const res = await fetch(`${BASE_URL}/news`);
-  return res.json();
+  return apiFetch('/data/news');
 }
 
 export async function fetchStats() {
-  const res = await fetch(`${BASE_URL}/stats`);
-  return res.json();
+  return apiFetch('/data/stats');
 }

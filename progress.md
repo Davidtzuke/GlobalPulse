@@ -115,7 +115,30 @@
 
 ---
 
-## Dashboard Engineer - PENDING
+## Dashboard Engineer - COMPLETED
+
+**Status**: Done
+**Agent**: Dashboard Engineer
+
+### What was done:
+- Enhanced Zustand store (`useStore.js`): added `activeTab`, `setAllData` bulk setter, auto-updates `lastUpdated` on data changes
+- Implemented `useWebSocket.js`: auto-reconnecting WebSocket hook with exponential backoff (1s→30s max), dispatches to store by message `type` field (flights/conflicts/earthquakes/news/stats/all), tracks connection status
+- Enhanced `api/client.js`: added error handling, `fetchAllData()` for `/api/data/all`, consistent error logging
+- Implemented `StatsBar.jsx`: animated count-up stat cards (Flights, Conflicts, Earthquakes, Countries, Avg Magnitude), connection status indicator, last updated timestamp, color-coded per data type with lucide-react icons
+- Implemented `DashboardPanel.jsx`: three Recharts panels — earthquake magnitude distribution (bar chart), conflicts by region (horizontal bar), data distribution (donut/pie chart), custom dark-themed tooltips
+- Implemented `LiveFeed.jsx`: scrolling event feed combining all data sources, color-coded by type, shows magnitude/altitude values, respects filter toggles, sorted by recency, max 15 items
+- Implemented `FilterPanel.jsx`: toggle buttons for each data layer (flights/conflicts/quakes/news), color-coded active/inactive states, connected to store filters
+- Wired all components into `App.jsx`: initial REST data fetch with fallback (bulk then individual), WebSocket hook, sidebar with StatsBar + DashboardPanel, LiveFeed overlay on globe
+
+### Notes for downstream agents:
+
+**Integration Engineer:**
+- WebSocket expects messages as `{"type": "flights|conflicts|earthquakes|news|stats|all", "data": [...]}`
+- Initial data loads via `GET /api/data/all` with fallback to individual endpoints
+- Store `setAllData()` accepts `{ flights, conflicts, earthquakes, news, stats }` for bulk updates
+- All components read from Zustand store — just ensure backend populates data correctly
+- FilterPanel toggles affect both LiveFeed display and Globe layers (via `store.filters`)
+- Build verified: `npm run build` succeeds cleanly
 
 ---
 
