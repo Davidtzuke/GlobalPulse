@@ -33,6 +33,7 @@ const useStore = create((set, get) => ({
   connected: false,
   selectedLayer: 'all',
   lastUpdate: null,
+  mapBounds: null,
 
   // Actions
   setFlights: (flights) => set({ flights, lastUpdate: new Date() }),
@@ -42,6 +43,7 @@ const useStore = create((set, get) => ({
   setStats: (stats) => set({ stats }),
   setConnected: (connected) => set({ connected }),
   setSelectedLayer: (selectedLayer) => set({ selectedLayer }),
+  setMapBounds: (mapBounds) => set({ mapBounds }),
 }))
 
 export default useStore

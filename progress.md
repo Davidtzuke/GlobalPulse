@@ -76,9 +76,33 @@ frontend/
 
 ---
 
-## Globe Engineer (Map Engineer)
-**Status**: Pending
-**Scope**: Implement WorldMap.jsx, FlightLayer, EarthquakeLayer, ConflictLayer
+## Globe Engineer (Map Engineer) ✅ COMPLETE
+**Status**: Done
+**Scope**: Implement WorldMap.jsx, FlightLayer, EarthquakeLayer, ConflictLayer, CountryLayer, MapControls
+
+### Files Created
+- `frontend/src/components/WorldMap.jsx` — React-Leaflet MapContainer with CartoDB Dark Matter tiles, center [20,0], zoom 2, worldCopyJump, renders all layers + MapControls overlay, tracks viewport bounds in Zustand
+- `frontend/src/components/CountryLayer.jsx` — GeoJSON country borders from world-atlas TopoJSON (110m), highlights conflict countries in red tint, earthquake countries in orange tint, interactive tooltips with event counts
+- `frontend/src/components/FlightLayer.jsx` — Flight markers as rotated SVG arrows (cyan #00d4ff) pointing in heading direction via CSS transform, viewport-filtered for performance, sampled at low zoom (800 max at z≤3), tooltip with callsign/country/altitude/speed/heading
+- `frontend/src/components/EarthquakeLayer.jsx` — CircleMarkers sized by magnitude (3-20px), colored green/yellow/orange/red by severity, pulse animation for <24h events, popup with full details + USGS link
+- `frontend/src/components/ConflictLayer.jsx` — Red CircleMarkers with pulse for recent events, popup with title/description/country/date/source link
+- `frontend/src/components/MapControls.jsx` — Layer toggle overlay (countries/flights/earthquakes/conflicts) with colored icons
+
+### Files Modified
+- `frontend/src/store/useStore.js` — Added `mapBounds` state + `setMapBounds` action for viewport-based flight filtering
+- `frontend/src/index.css` — Removed tile invert filter (CartoDB Dark Matter is natively dark), added dark-themed tooltips/popups for all layers, pulse animations for recent events
+- `frontend/public/world-110m.json` — Natural Earth 110m country borders (TopoJSON, 108KB)
+- `frontend/public/world-50m.json` — Natural Earth 50m country borders (TopoJSON, 756KB, available for higher detail)
+
+### Dependencies Added
+- `topojson-client` — for converting TopoJSON to GeoJSON in CountryLayer
+
+### Notes for Integration Engineer
+- WorldMap receives all data from Zustand store (flights, earthquakes, conflicts)
+- Map layer visibility is controlled both by MapControls toggles and `selectedLayer` store state
+- FlightLayer uses `mapBounds` from store to only render visible flights (performance)
+- All layers accept data via props from WorldMap — just populate the store and it works
+- CountryLayer re-renders when conflict/earthquake counts change (keyed by data length)
 
 ---
 
