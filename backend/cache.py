@@ -2,8 +2,6 @@
 
 Provides a simple dictionary-based cache with time-to-live (TTL) expiration
 to reduce redundant API calls and respect rate limits.
-
-# TODO: Data Pipeline Engineer - implement full caching logic
 """
 
 import time
@@ -88,4 +86,3 @@ conflict_cache = TTLCache(ttl_seconds=600)
 # News articles update every few minutes
 news_cache = TTLCache(ttl_seconds=300)
 
-# TODO: Data Pipeline Engineer - implement full caching logic

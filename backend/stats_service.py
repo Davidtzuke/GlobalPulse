@@ -2,8 +2,6 @@
 
 Computes summary statistics from all four data streams for the
 dashboard overview panel.
-
-# TODO: Data Pipeline Engineer - enhance stats aggregation
 """
 
 from typing import List, Optional
@@ -46,4 +44,3 @@ def compute_stats(
         max_magnitude=max_magnitude,
     )
 
-# TODO: Data Pipeline Engineer - enhance stats aggregation

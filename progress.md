@@ -88,9 +88,29 @@ frontend/
 
 ---
 
-## Data Pipeline Engineer
-**Status**: Pending
+## Data Pipeline Engineer ✅ COMPLETE
+**Status**: Done
 **Scope**: Implement cache, stats, WebSocket, polling, APScheduler
+
+### Files Created
+- `backend/data_normalizer.py` — 7 utilities: `clean_callsign`, `safe_float`, `safe_int`, `ms_to_iso`, `unix_to_iso`, `clamp_coordinates`, `clean_text`
+- `backend/api_health.py` — `APIHealthMonitor` class + `GET /api/health` endpoint
+
+### Files Enhanced
+- `backend/main.py` — Full APScheduler integration: flights/60s, earthquakes/300s, conflicts/600s, news/300s, stats/120s, health/300s. Staggered initial fetch on startup. WebSocket broadcast after each fetch.
+- `backend/services/flight_service.py` — Added `data_normalizer` calls (`clean_callsign`, `clamp_coordinates`, `safe_float`), verified OpenSky indices [5]=lon [6]=lat, granular error handling
+- `backend/services/earthquake_service.py` — Added `clamp_coordinates`, `safe_float`, granular error handling
+- `backend/services/conflict_service.py` — Added country centroid geocoding (40+ countries), `clean_text`, fallback date parsing, granular error handling
+- `backend/services/news_service.py` — Added `clean_text`, broadened query, fallback date parsing, granular error handling
+- `backend/cache.py` — Cleaned up TODOs (already well implemented)
+- `backend/stats_service.py` — Cleaned up TODOs (already well implemented)
+- `frontend/src/hooks/useMapData.js` — Full polling fallback with `Promise.allSettled`, initial fetch on mount, 30s polling when WS disconnected
+
+### Notes for Integration Engineer
+- Health endpoint at `GET /api/health` returns status of all 4 external APIs
+- APScheduler runs in asyncio mode, started/stopped in lifespan
+- WebSocket broadcasts use LiveUpdate envelope: `{ type, data, timestamp }`
+- Frontend `useMapData` does initial REST fetch, then relies on WS; falls back to polling if WS disconnects
 
 ---
 
