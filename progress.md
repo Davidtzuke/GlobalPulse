@@ -100,7 +100,29 @@
 
 ---
 
-## Data Pipeline Engineer - PENDING
+## Data Pipeline Engineer - COMPLETED
+
+**Status**: Done
+**Agent**: Data Pipeline Engineer
+
+### What was done:
+- Created `data_normalizer.py` with utilities: `clean_callsign`, `safe_float`, `safe_int`, `ms_to_iso`, `unix_to_iso`, `clamp_coordinates`
+- Created `api_health.py` with `APIHealthMonitor` class for external API health checks
+- Added `GET /api/health` endpoint returning status of all 4 external APIs (OpenSky, GDELT Events, GDELT News, USGS)
+- Enhanced `services/flight_service.py`: added `data_normalizer` calls, verified OpenSky state vector indices (5=lon, 6=lat), added coordinate validation, granular error handling
+- Enhanced `services/conflict_service.py`: added `data_normalizer` calls, coordinate validation via `clamp_coordinates`
+- Enhanced `services/earthquake_service.py`: added `data_normalizer` calls, safe type conversions, coordinate validation
+- Enhanced `services/news_service.py`: added `data_normalizer` calls, geo coordinate extraction with fallbacks, tone parsing
+- All services use consistent cache keys, proper logging, and return empty lists on errors (never crash)
+
+### Notes for downstream agents:
+
+**Integration Engineer:**
+- All 4 services are fully implemented and return typed Pydantic model lists
+- Cache keys: `flights` (15s TTL), `conflicts` (300s), `earthquakes` (60s), `news` (120s)
+- Health check available at `GET /api/health` — checks all external APIs
+- `data_normalizer.py` is available for any additional data cleaning needs
+- Services handle all error cases gracefully — empty list returned on failure
 
 ---
 
