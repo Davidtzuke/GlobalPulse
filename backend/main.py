@@ -90,18 +90,12 @@ async def lifespan(app: FastAPI):
     logger.info("Global Pulse v2 backend starting up...")
 
     # Schedule periodic data fetches
-    scheduler.add_job(_broadcast_flights, "interval", seconds=60, id="flights",
-                      next_run_time=None)  # Don't run immediately, wait for initial fetch
-    scheduler.add_job(_broadcast_earthquakes, "interval", seconds=300, id="earthquakes",
-                      next_run_time=None)
-    scheduler.add_job(_broadcast_conflicts, "interval", seconds=600, id="conflicts",
-                      next_run_time=None)
-    scheduler.add_job(_broadcast_news, "interval", seconds=300, id="news",
-                      next_run_time=None)
-    scheduler.add_job(_broadcast_stats, "interval", seconds=120, id="stats",
-                      next_run_time=None)
-    scheduler.add_job(run_health_checks, "interval", seconds=300, id="health_checks",
-                      next_run_time=None)
+    scheduler.add_job(_broadcast_flights, "interval", seconds=60, id="flights")
+    scheduler.add_job(_broadcast_earthquakes, "interval", seconds=300, id="earthquakes")
+    scheduler.add_job(_broadcast_conflicts, "interval", seconds=600, id="conflicts")
+    scheduler.add_job(_broadcast_news, "interval", seconds=300, id="news")
+    scheduler.add_job(_broadcast_stats, "interval", seconds=120, id="stats")
+    scheduler.add_job(run_health_checks, "interval", seconds=300, id="health_checks")
 
     scheduler.start()
 

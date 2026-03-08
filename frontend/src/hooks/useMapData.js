@@ -6,38 +6,22 @@
  */
 import { useEffect, useRef, useCallback } from 'react'
 import useStore from '../store/useStore'
-import { fetchFlights, fetchEarthquakes, fetchConflicts, fetchNews, fetchStats } from '../api/client'
+import { fetchAllData } from '../api/client'
 
 export default function useMapData() {
   const connected = useStore(s => s.connected)
   const initialFetched = useRef(false)
 
   const pollAll = useCallback(async () => {
+    const data = await fetchAllData()
+    if (!data) return
     const store = useStore.getState()
 
-    const [flightData, eqData, conflictData, newsData, statsData] = await Promise.allSettled([
-      fetchFlights(),
-      fetchEarthquakes(),
-      fetchConflicts(),
-      fetchNews(),
-      fetchStats(),
-    ])
-
-    if (flightData.status === 'fulfilled' && flightData.value?.flights) {
-      store.setFlights(flightData.value.flights)
-    }
-    if (eqData.status === 'fulfilled' && eqData.value?.earthquakes) {
-      store.setEarthquakes(eqData.value.earthquakes)
-    }
-    if (conflictData.status === 'fulfilled' && conflictData.value?.conflicts) {
-      store.setConflicts(conflictData.value.conflicts)
-    }
-    if (newsData.status === 'fulfilled' && newsData.value?.news) {
-      store.setNews(newsData.value.news)
-    }
-    if (statsData.status === 'fulfilled' && statsData.value) {
-      store.setStats(statsData.value)
-    }
+    if (Array.isArray(data.flights)) store.setFlights(data.flights)
+    if (Array.isArray(data.earthquakes)) store.setEarthquakes(data.earthquakes)
+    if (Array.isArray(data.conflicts)) store.setConflicts(data.conflicts)
+    if (Array.isArray(data.news)) store.setNews(data.news)
+    if (data.stats) store.setStats(data.stats)
   }, [])
 
   // Initial fetch on mount
@@ -55,4 +39,6 @@ export default function useMapData() {
     const interval = setInterval(pollAll, 30000)
     return () => clearInterval(interval)
   }, [connected, pollAll])
+
+  return { refresh: pollAll }
 }

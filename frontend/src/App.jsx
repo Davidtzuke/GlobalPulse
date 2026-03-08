@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Activity, Newspaper, Swords, Radio, RefreshCw, Wifi, WifiOff, MapPin } from 'lucide-react'
 import WorldMap from './components/WorldMap'
 import StatsBar from './components/StatsBar'
@@ -6,10 +6,19 @@ import NewsPanel from './components/NewsPanel'
 import ConflictPanel from './components/ConflictPanel'
 import EarthquakePanel from './components/EarthquakePanel'
 import LiveFeed from './components/LiveFeed'
+import useWebSocket from './hooks/useWebSocket'
+import useMapData from './hooks/useMapData'
+import useStore from './store/useStore'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('stats')
-  const [connected, setConnected] = useState(false)
+  const connected = useStore(s => s.connected)
+
+  // Connect WebSocket for real-time updates
+  useWebSocket()
+
+  // Initial data fetch + polling fallback when WS disconnected
+  const { refresh } = useMapData()
 
   const tabs = [
     { id: 'stats', label: 'Live Stats', icon: Activity },
@@ -28,7 +37,11 @@ export default function App() {
           <span className="text-xs text-gray-500 bg-pulse-card px-2 py-0.5 rounded">v2</span>
         </div>
         <div className="flex items-center gap-3">
-          <button className="p-1.5 hover:bg-pulse-card rounded transition-colors">
+          <button
+            onClick={refresh}
+            className="p-1.5 hover:bg-pulse-card rounded transition-colors"
+            title="Refresh data"
+          >
             <RefreshCw className="w-4 h-4 text-gray-400" />
           </button>
           <div className="flex items-center gap-1.5">
