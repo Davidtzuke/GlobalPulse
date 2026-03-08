@@ -14,25 +14,32 @@ async function apiFetch(endpoint) {
 }
 
 export async function fetchAllData() {
-  return apiFetch('/data/all');
+  const result = await apiFetch('/all');
+  if (!result) return null;
+  return result.data || result;
 }
 
 export async function fetchFlights() {
-  return apiFetch('/data/flights');
+  const result = await apiFetch('/flights');
+  return result?.data || null;
 }
 
 export async function fetchConflicts() {
-  return apiFetch('/data/conflicts');
+  const result = await apiFetch('/conflicts');
+  return result?.data || null;
 }
 
 export async function fetchEarthquakes() {
-  return apiFetch('/data/earthquakes');
+  const result = await apiFetch('/earthquakes');
+  return result?.data || null;
 }
 
 export async function fetchNews() {
-  return apiFetch('/data/news');
+  const result = await apiFetch('/news');
+  return result?.data || null;
 }
 
 export async function fetchStats() {
-  return apiFetch('/data/stats');
+  const result = await apiFetch('/stats');
+  return result?.data || null;
 }

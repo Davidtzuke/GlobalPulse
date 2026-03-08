@@ -54,6 +54,25 @@ async def get_stats():
     return {"data": stats.model_dump()}
 
 
+@router.get("/all")
+async def get_all_data():
+    """Get all data sources in a single request."""
+    flights = await fetch_flights()
+    conflicts = await fetch_conflicts()
+    earthquakes = await fetch_earthquakes()
+    news_articles = await fetch_news()
+    stats = compute_stats(flights, conflicts, earthquakes, news_articles)
+    return {
+        "data": {
+            "flights": [f.model_dump() for f in flights],
+            "conflicts": [c.model_dump() for c in conflicts],
+            "earthquakes": [e.model_dump() for e in earthquakes],
+            "news": [n.model_dump() for n in news_articles],
+            "stats": stats.model_dump(),
+        }
+    }
+
+
 @router.get("/health")
 async def api_health():
     """Get health status of all external APIs."""

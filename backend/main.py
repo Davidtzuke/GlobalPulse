@@ -47,12 +47,12 @@ async def fetch_and_broadcast():
 
         if manager.active_connections:
             await manager.broadcast({
-                "event_type": "update",
+                "type": "all",
                 "data": {
-                    "flights": {"count": len(flights)},
-                    "conflicts": {"count": len(conflicts)},
-                    "earthquakes": {"count": len(earthquakes)},
-                    "news": {"count": len(news_articles)},
+                    "flights": [f.model_dump() for f in flights],
+                    "conflicts": [c.model_dump() for c in conflicts],
+                    "earthquakes": [e.model_dump() for e in earthquakes],
+                    "news": [n.model_dump() for n in news_articles],
                     "stats": stats.model_dump(),
                 },
                 "timestamp": now,
