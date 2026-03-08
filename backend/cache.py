@@ -1,37 +1,91 @@
-"""TTL-based in-memory cache for API responses."""
+"""TTL cache for API responses.
+
+Provides a simple dictionary-based cache with time-to-live (TTL) expiration
+to reduce redundant API calls and respect rate limits.
+
+# TODO: Data Pipeline Engineer - implement full caching logic
+"""
 
 import time
 from typing import Any, Optional
 
 
 class TTLCache:
-    """Simple TTL cache with per-key expiration."""
+    """Simple dictionary-based cache with per-entry TTL expiration.
 
-    def __init__(self, default_ttl: int = 60):
-        self._store: dict[str, tuple[Any, float]] = {}  # key -> (data, expiry_time)
-        self.default_ttl = default_ttl
+    Each cached entry is stored alongside its insertion timestamp.
+    Entries are considered expired once their age exceeds the configured TTL.
+    """
+
+    def __init__(self, ttl_seconds: int) -> None:
+        """Initialize the cache.
+
+        Args:
+            ttl_seconds: Time-to-live in seconds for each cache entry.
+        """
+        self.ttl_seconds = ttl_seconds
+        self._store: dict[str, dict[str, Any]] = {}
+
+    def is_expired(self, key: str) -> bool:
+        """Check whether a cache entry has expired or does not exist.
+
+        Args:
+            key: The cache key to check.
+
+        Returns:
+            True if the entry is missing or older than the TTL.
+        """
+        if key not in self._store:
+            return True
+        entry = self._store[key]
+        return (time.time() - entry["timestamp"]) > self.ttl_seconds
 
     def get(self, key: str) -> Optional[Any]:
-        """Return cached value if not expired, else None."""
-        if key not in self._store:
-            return None
-        data, expiry = self._store[key]
-        if time.time() > expiry:
-            del self._store[key]
-            return None
-        return data
+        """Retrieve a cached value if it exists and has not expired.
 
-    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
-        """Store value with TTL in seconds."""
-        ttl = ttl if ttl is not None else self.default_ttl
-        self._store[key] = (value, time.time() + ttl)
+        Args:
+            key: The cache key.
 
-    def clear(self, key: Optional[str] = None) -> None:
-        """Clear a specific key or the entire cache."""
-        if key is not None:
+        Returns:
+            The cached value, or None if missing/expired.
+        """
+        if self.is_expired(key):
+            # Clean up expired entry
             self._store.pop(key, None)
-        else:
-            self._store.clear()
+            return None
+        return self._store[key]["value"]
+
+    def set(self, key: str, value: Any) -> None:
+        """Store a value in the cache with the current timestamp.
+
+        Args:
+            key: The cache key.
+            value: The value to cache.
+        """
+        self._store[key] = {
+            "value": value,
+            "timestamp": time.time(),
+        }
+
+    def clear(self) -> None:
+        """Remove all entries from the cache."""
+        self._store.clear()
 
 
-cache = TTLCache()
+# ---------------------------------------------------------------------------
+# Pre-configured cache instances for each data stream
+# ---------------------------------------------------------------------------
+
+# Flights refresh frequently (OpenSky has 10s resolution, we cache for 60s)
+flight_cache = TTLCache(ttl_seconds=60)
+
+# Earthquakes update every 5 minutes on USGS side
+earthquake_cache = TTLCache(ttl_seconds=300)
+
+# Conflict events change less frequently
+conflict_cache = TTLCache(ttl_seconds=600)
+
+# News articles update every few minutes
+news_cache = TTLCache(ttl_seconds=300)
+
+# TODO: Data Pipeline Engineer - implement full caching logic

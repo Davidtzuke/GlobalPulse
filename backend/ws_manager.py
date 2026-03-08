@@ -1,49 +1,69 @@
-"""WebSocket connection manager for broadcasting live updates."""
+"""WebSocket connection manager for Global Pulse v2.
 
-from fastapi import WebSocket
-from typing import Any
+Manages active WebSocket connections and provides broadcast
+functionality for pushing real-time updates to all connected clients.
+"""
+
 import json
 import logging
+from datetime import datetime
+from typing import Any, List
+
+from fastapi import WebSocket
+
+from schemas import LiveUpdate
 
 logger = logging.getLogger(__name__)
 
 
 class ConnectionManager:
-    """Manages WebSocket connections and broadcasts updates to all clients."""
+    """Manages WebSocket connections and broadcasts updates."""
 
-    def __init__(self):
-        self.active_connections: list[WebSocket] = []
+    def __init__(self) -> None:
+        self.connections: List[WebSocket] = []
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket) -> None:
         """Accept and register a new WebSocket connection."""
         await websocket.accept()
-        self.active_connections.append(websocket)
-        logger.info(f"Client connected. Total connections: {len(self.active_connections)}")
+        self.connections.append(websocket)
+        logger.info("WebSocket connected. Total connections: %d", len(self.connections))
 
-    def disconnect(self, websocket: WebSocket):
-        """Remove a WebSocket connection."""
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-        logger.info(f"Client disconnected. Total connections: {len(self.active_connections)}")
+    def disconnect(self, websocket: WebSocket) -> None:
+        """Remove a WebSocket connection from the active list."""
+        if websocket in self.connections:
+            self.connections.remove(websocket)
+        logger.info("WebSocket disconnected. Total connections: %d", len(self.connections))
 
-    async def broadcast(self, message: dict[str, Any]):
-        """Send a message to all connected clients."""
-        disconnected = []
-        for connection in self.active_connections:
+    async def broadcast(self, message: dict) -> None:
+        """Send a JSON message to all connected clients.
+
+        Automatically removes clients that have disconnected.
+        """
+        disconnected: List[WebSocket] = []
+        for connection in self.connections:
             try:
                 await connection.send_json(message)
             except Exception:
                 disconnected.append(connection)
+                logger.warning("Failed to send to a client; marking for removal.")
+
         for conn in disconnected:
             self.disconnect(conn)
 
-    async def send_personal(self, websocket: WebSocket, message: dict[str, Any]):
-        """Send a message to a specific client."""
-        try:
-            await websocket.send_json(message)
-        except Exception:
-            self.disconnect(websocket)
+    async def broadcast_update(self, update_type: str, data: Any) -> None:
+        """Create a LiveUpdate envelope and broadcast it to all clients.
+
+        Args:
+            update_type: One of 'flight', 'earthquake', 'conflict', 'news', 'stats'.
+            data: The payload data to include in the update.
+        """
+        update = LiveUpdate(
+            type=update_type,
+            data=data,
+            timestamp=datetime.utcnow(),
+        )
+        await self.broadcast(update.model_dump(mode="json"))
 
 
-# Singleton instance
+# Singleton instance used across the application
 manager = ConnectionManager()

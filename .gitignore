@@ -14,3 +14,5 @@ __pycache__/
 
 # Orcha internal files
 .orcha/
+dist/
+.vite/

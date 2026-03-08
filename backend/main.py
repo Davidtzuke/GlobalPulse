@@ -1,128 +1,96 @@
-"""FastAPI application for Global Pulse - Real-time World Dashboard."""
+"""Global Pulse v2 - FastAPI Backend
 
-import asyncio
+Real-time global data dashboard aggregating multiple free API sources:
+
+  1. Flights    - OpenSky Network (https://opensky-network.org/api/states/all)
+                  Free anonymous access, 400 credits/day, 10s resolution.
+
+  2. Earthquakes - USGS GeoJSON (https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson)
+                   Free, no auth. Updated every 5 minutes.
+
+  3. Conflicts  - GDELT DOC 2.0 (https://api.gdeltproject.org/api/v2/doc/doc)
+                  Filtered for war/conflict/military keywords. Free, no auth.
+
+  4. News       - GDELT DOC 2.0 (https://api.gdeltproject.org/api/v2/doc/doc)
+                  General world news query. Free, no auth.
+"""
+
+import logging
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-import logging
 
+from routers.data import router as data_router
 from ws_manager import manager
-from routers import data
-from services.flight_service import fetch_flights
-from services.conflict_service import fetch_conflicts
-from services.earthquake_service import fetch_earthquakes
-from services.news_service import fetch_news
-from stats_service import compute_stats
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-scheduler = AsyncIOScheduler()
-
-
-async def fetch_and_broadcast():
-    """Fetch all data sources and broadcast updates via WebSocket."""
-    try:
-        results = await asyncio.gather(
-            fetch_flights(),
-            fetch_conflicts(),
-            fetch_earthquakes(),
-            fetch_news(),
-            return_exceptions=True,
-        )
-
-        flights = results[0] if not isinstance(results[0], Exception) else []
-        conflicts = results[1] if not isinstance(results[1], Exception) else []
-        earthquakes = results[2] if not isinstance(results[2], Exception) else []
-        news_articles = results[3] if not isinstance(results[3], Exception) else []
-
-        for i, name in enumerate(["flights", "conflicts", "earthquakes", "news"]):
-            if isinstance(results[i], Exception):
-                logger.error(f"{name} fetch error: {results[i]}")
-
-        stats = compute_stats(flights, conflicts, earthquakes, news_articles)
-        now = datetime.now(timezone.utc).isoformat()
-
-        if manager.active_connections:
-            await manager.broadcast({
-                "type": "all",
-                "data": {
-                    "flights": [f.model_dump() for f in flights],
-                    "conflicts": [c.model_dump() for c in conflicts],
-                    "earthquakes": [e.model_dump() for e in earthquakes],
-                    "news": [n.model_dump() for n in news_articles],
-                    "stats": stats.model_dump(),
-                },
-                "timestamp": now,
-            })
-
-        logger.info(
-            f"Data refresh: {len(flights)} flights, {len(conflicts)} conflicts, "
-            f"{len(earthquakes)} earthquakes, {len(news_articles)} news"
-        )
-    except Exception as e:
-        logger.error(f"Error in fetch_and_broadcast: {e}")
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan: startup and shutdown events."""
-    logger.info("Global Pulse starting up...")
+    """Application lifespan: startup and shutdown hooks.
 
-    # Initial data fetch
-    asyncio.create_task(fetch_and_broadcast())
-
-    # Schedule periodic fetching every 30 seconds
-    scheduler.add_job(fetch_and_broadcast, "interval", seconds=30, id="data_refresh")
-    scheduler.start()
-    logger.info("Scheduler started - fetching data every 30s")
-
+    # TODO: Data Pipeline Engineer - add APScheduler jobs here:
+    #   - fetch_flights every 60s
+    #   - fetch_earthquakes every 300s
+    #   - fetch_conflicts every 600s
+    #   - fetch_news every 300s
+    #   - broadcast updates via ws_manager after each fetch
+    """
+    logger.info("Global Pulse v2 backend starting up...")
+    # TODO: Data Pipeline Engineer - start APScheduler here
     yield
-
-    logger.info("Global Pulse shutting down...")
-    scheduler.shutdown(wait=False)
+    logger.info("Global Pulse v2 backend shutting down...")
+    # TODO: Data Pipeline Engineer - shutdown APScheduler here
 
 
 app = FastAPI(
-    title="Global Pulse API",
-    description="Real-time world dashboard API providing flights, conflicts, earthquakes, and news data",
-    version="1.0.0",
+    title="Global Pulse v2",
+    description="Real-time global data dashboard - flights, earthquakes, conflicts, and news",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
-# CORS middleware for frontend dev server
+# CORS middleware - allow all origins for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include REST API router
-app.include_router(data.router, prefix="/api")
-
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    """WebSocket endpoint for live data updates."""
-    await manager.connect(websocket)
-    try:
-        while True:
-            message = await websocket.receive_text()
-            logger.info(f"Received from client: {message}")
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
+# Include REST API routes
+app.include_router(data_router)
 
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "service": "global-pulse",
-        "connections": len(manager.active_connections),
-        "scheduler_running": scheduler.running,
-    }
+    return {"status": "ok", "version": "2.0.0"}
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time data updates.
+
+    Clients connect here to receive live updates for flights,
+    earthquakes, conflicts, news, and dashboard stats.
+    """
+    await manager.connect(websocket)
+    try:
+        while True:
+            # Keep connection alive; listen for any client messages
+            data = await websocket.receive_text()
+            logger.debug("Received from client: %s", data)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        logger.info("Client disconnected from WebSocket.")
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

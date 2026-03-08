@@ -1,45 +1,38 @@
-const BASE_URL = '/api';
+/** API client for Global Pulse backend
+ *
+ * Endpoints:
+ * - GET /api/flights -> { flights: Flight[], count: number }
+ * - GET /api/earthquakes -> { earthquakes: Earthquake[], count: number }
+ * - GET /api/conflicts -> { conflicts: Conflict[], count: number }
+ * - GET /api/news -> { news: NewsArticle[], count: number }
+ * - GET /api/stats -> DashboardStats
+ *
+ * TODO: Data Pipeline Engineer - implement full API client
+ */
 
-async function apiFetch(endpoint) {
-  try {
-    const res = await fetch(`${BASE_URL}${endpoint}`);
-    if (!res.ok) {
-      throw new Error(`API error ${res.status}: ${res.statusText}`);
-    }
-    return await res.json();
-  } catch (err) {
-    console.error(`[API] Failed to fetch ${endpoint}:`, err);
-    return null;
-  }
-}
-
-export async function fetchAllData() {
-  const result = await apiFetch('/all');
-  if (!result) return null;
-  return result.data || result;
-}
+const BASE_URL = '/api'
 
 export async function fetchFlights() {
-  const result = await apiFetch('/flights');
-  return result?.data || null;
-}
-
-export async function fetchConflicts() {
-  const result = await apiFetch('/conflicts');
-  return result?.data || null;
+  const res = await fetch(`${BASE_URL}/flights`)
+  return res.json()
 }
 
 export async function fetchEarthquakes() {
-  const result = await apiFetch('/earthquakes');
-  return result?.data || null;
+  const res = await fetch(`${BASE_URL}/earthquakes`)
+  return res.json()
+}
+
+export async function fetchConflicts() {
+  const res = await fetch(`${BASE_URL}/conflicts`)
+  return res.json()
 }
 
 export async function fetchNews() {
-  const result = await apiFetch('/news');
-  return result?.data || null;
+  const res = await fetch(`${BASE_URL}/news`)
+  return res.json()
 }
 
 export async function fetchStats() {
-  const result = await apiFetch('/stats');
-  return result?.data || null;
+  const res = await fetch(`${BASE_URL}/stats`)
+  return res.json()
 }

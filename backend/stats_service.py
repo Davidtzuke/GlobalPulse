@@ -1,38 +1,49 @@
-"""Stats aggregation service for dashboard."""
+"""Dashboard statistics aggregation service.
 
-from collections import Counter
-from datetime import datetime, timezone
-from schemas import DashboardStats, Flight, Conflict, Earthquake, NewsArticle
+Computes summary statistics from all four data streams for the
+dashboard overview panel.
+
+# TODO: Data Pipeline Engineer - enhance stats aggregation
+"""
+
+from typing import List, Optional
+
+from schemas import Conflict, DashboardStats, Earthquake, Flight, NewsArticle
 
 
 def compute_stats(
-    flights: list[Flight],
-    conflicts: list[Conflict],
-    earthquakes: list[Earthquake],
-    news: list[NewsArticle],
+    flights: List[Flight],
+    earthquakes: List[Earthquake],
+    conflicts: List[Conflict],
+    news: List[NewsArticle],
 ) -> DashboardStats:
-    """Aggregate statistics from all data sources."""
-    # Earthquake stats
-    mags = [e.magnitude for e in earthquakes if e.magnitude is not None]
-    avg_mag = round(sum(mags) / len(mags), 2) if mags else None
-    max_mag = round(max(mags), 2) if mags else None
+    """Compute aggregated dashboard statistics from current data.
 
-    # Conflict countries
-    country_counts = Counter(c.country for c in conflicts if c.country)
-    conflict_countries = [c for c, _ in country_counts.most_common(10)]
+    Args:
+        flights: List of current flight positions.
+        earthquakes: List of recent earthquake events.
+        conflicts: List of detected conflict events.
+        news: List of recent news articles.
 
-    # Top news sources
-    source_counts = Counter(n.source for n in news if n.source)
-    top_sources = [s for s, _ in source_counts.most_common(10)]
+    Returns:
+        DashboardStats with counts and basic magnitude calculations.
+    """
+    # Basic magnitude calculations
+    magnitudes = [eq.magnitude for eq in earthquakes if eq.magnitude is not None]
+    avg_magnitude: Optional[float] = None
+    max_magnitude: Optional[float] = None
+
+    if magnitudes:
+        avg_magnitude = round(sum(magnitudes) / len(magnitudes), 2)
+        max_magnitude = max(magnitudes)
 
     return DashboardStats(
         total_flights=len(flights),
-        total_conflicts=len(conflicts),
         total_earthquakes=len(earthquakes),
-        total_news=len(news),
-        avg_earthquake_magnitude=avg_mag,
-        max_earthquake_magnitude=max_mag,
-        conflict_countries=conflict_countries,
-        top_news_sources=top_sources,
-        last_updated=datetime.now(timezone.utc),
+        total_conflicts=len(conflicts),
+        latest_news_count=len(news),
+        avg_magnitude=avg_magnitude,
+        max_magnitude=max_magnitude,
     )
+
+# TODO: Data Pipeline Engineer - enhance stats aggregation
