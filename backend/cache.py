@@ -1,36 +1,37 @@
-"""PLACEHOLDER - TTL cache for API responses.
+"""TTL-based in-memory cache for API responses."""
 
-To be implemented by Data Pipeline Engineer.
-- In-memory TTL cache to reduce API calls
-- Configurable TTL per data source
-- Thread-safe access
-"""
-
+import time
 from typing import Any, Optional
-from datetime import datetime, timedelta
 
 
 class TTLCache:
-    """Simple TTL cache for storing API responses."""
+    """Simple TTL cache with per-key expiration."""
 
     def __init__(self, default_ttl: int = 60):
-        self._cache: dict[str, dict[str, Any]] = {}
+        self._store: dict[str, tuple[Any, float]] = {}  # key -> (data, expiry_time)
         self.default_ttl = default_ttl
 
     def get(self, key: str) -> Optional[Any]:
-        """Get value from cache if not expired."""
-        # PLACEHOLDER - implement TTL check
-        pass
+        """Return cached value if not expired, else None."""
+        if key not in self._store:
+            return None
+        data, expiry = self._store[key]
+        if time.time() > expiry:
+            del self._store[key]
+            return None
+        return data
 
     def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
-        """Set value in cache with TTL."""
-        # PLACEHOLDER - implement cache storage
-        pass
+        """Store value with TTL in seconds."""
+        ttl = ttl if ttl is not None else self.default_ttl
+        self._store[key] = (value, time.time() + ttl)
 
     def clear(self, key: Optional[str] = None) -> None:
-        """Clear specific key or entire cache."""
-        # PLACEHOLDER
-        pass
+        """Clear a specific key or the entire cache."""
+        if key is not None:
+            self._store.pop(key, None)
+        else:
+            self._store.clear()
 
 
 cache = TTLCache()
