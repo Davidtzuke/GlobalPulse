@@ -1,8 +1,9 @@
 import React from 'react';
 import { Globe, Activity, AlertTriangle, Newspaper, Plane } from 'lucide-react';
 
-// Import components (placeholders to be implemented by other agents)
-// import Globe3D from './components/Globe3D';
+// Globe component (implemented by Globe Engineer)
+import Globe3D from './components/Globe3D';
+// Placeholders to be implemented by other agents
 // import DashboardPanel from './components/DashboardPanel';
 // import StatsBar from './components/StatsBar';
 // import LiveFeed from './components/LiveFeed';
@@ -72,13 +73,7 @@ function App() {
 
         {/* Globe area */}
         <main className="flex-1 relative">
-          {/* Globe3D component will render here */}
-          <div className="absolute inset-0 flex items-center justify-center text-gray-600">
-            <div className="text-center">
-              <Globe className="w-16 h-16 mx-auto mb-4 opacity-20" />
-              <p className="text-sm">3D Globe will render here</p>
-            </div>
-          </div>
+          <Globe3D />
 
           {/* Live feed overlay - bottom right */}
           <div className="absolute bottom-4 right-4 w-80">

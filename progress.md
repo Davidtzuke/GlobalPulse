@@ -70,7 +70,29 @@
 
 ---
 
-## Globe Engineer - PENDING
+## Globe Engineer - COMPLETED
+
+**Status**: Done
+**Agent**: Globe Engineer
+
+### What was done:
+- Implemented `Globe3D.jsx` with globe.gl: dark earth texture, star field background, blue atmosphere, auto-rotate, ResizeObserver, cleanup on unmount
+- Points layer with `.pointsMerge(true)` for performance — all data types merged into single points array
+- Rings layer for pulsing conflict (red) and earthquake (amber) indicators
+- Legend overlay in bottom-left corner with color-coded layer indicators
+- Implemented `FlightLayer.jsx` — `formatFlightPoints()` maps flights to cyan points (size 0.3, alt 0.01)
+- Implemented `ConflictLayer.jsx` — `formatConflictPoints()` (red, size 0.8) + `formatConflictRings()` (pulsing, maxR 3)
+- Implemented `EarthquakeLayer.jsx` — `formatEarthquakePoints()` (amber, size based on magnitude) + `formatEarthquakeRings()` (pulsing, maxR scales with magnitude)
+- Implemented `useGlobeData.js` hook — reads from Zustand store, respects filter toggles, returns merged `{ points, rings }`
+- Wired Globe3D into App.jsx main area (replaced placeholder)
+
+### Notes for downstream agents:
+
+**Integration Engineer:**
+- Globe3D auto-reads from Zustand store via `useGlobeData` hook — just populate store with `setFlights()`, `setConflicts()`, `setEarthquakes()`
+- Data shapes expected: `{ latitude, longitude, callsign?, origin_country? }` for flights, `{ latitude, longitude, event_type?, country? }` for conflicts, `{ latitude, longitude, magnitude, place? }` for earthquakes
+- Filter toggles in store (`filters.flights`, `filters.conflicts`, `filters.earthquakes`) are respected
+- Globe handles resize automatically via ResizeObserver
 
 ---
 

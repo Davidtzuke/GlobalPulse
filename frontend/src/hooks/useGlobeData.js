@@ -1,33 +1,36 @@
 /**
- * PLACEHOLDER - Hook to transform store data into globe.gl-compatible format.
- *
- * To be implemented by Globe Engineer.
- *
- * Converts flights, conflicts, earthquakes, and news into
- * points, arcs, and labels for the 3D globe.
+ * Hook to transform Zustand store data into globe.gl-compatible format.
+ * Merges all data layers into unified points and rings arrays.
  */
 
 import { useMemo } from 'react';
 import useStore from '../store/useStore';
+import { formatFlightPoints } from '../components/FlightLayer';
+import { formatConflictPoints, formatConflictRings } from '../components/ConflictLayer';
+import { formatEarthquakePoints, formatEarthquakeRings } from '../components/EarthquakeLayer';
 
 export function useGlobeData() {
   const flights = useStore((s) => s.flights);
   const conflicts = useStore((s) => s.conflicts);
   const earthquakes = useStore((s) => s.earthquakes);
-  const news = useStore((s) => s.news);
   const filters = useStore((s) => s.filters);
 
   const points = useMemo(() => {
-    // PLACEHOLDER - transform data to globe points
-    return [];
-  }, [flights, conflicts, earthquakes, news, filters]);
+    const allPoints = [];
+    if (filters.flights) allPoints.push(...formatFlightPoints(flights));
+    if (filters.conflicts) allPoints.push(...formatConflictPoints(conflicts));
+    if (filters.earthquakes) allPoints.push(...formatEarthquakePoints(earthquakes));
+    return allPoints;
+  }, [flights, conflicts, earthquakes, filters]);
 
-  const arcs = useMemo(() => {
-    // PLACEHOLDER - flight arcs
-    return [];
-  }, [flights, filters]);
+  const rings = useMemo(() => {
+    const allRings = [];
+    if (filters.conflicts) allRings.push(...formatConflictRings(conflicts));
+    if (filters.earthquakes) allRings.push(...formatEarthquakeRings(earthquakes));
+    return allRings;
+  }, [conflicts, earthquakes, filters]);
 
-  return { points, arcs };
+  return { points, rings };
 }
 
 export default useGlobeData;
