@@ -66,7 +66,26 @@
 
 ---
 
-## Backend Engineer - PENDING
+## Backend Engineer - COMPLETED
+
+**Status**: Done
+**Agent**: Backend Engineer
+
+### What was done:
+- Implemented TTL cache (`cache.py`) with per-key expiration, get/set/clear
+- Implemented `flight_service.py` - OpenSky Network API, correct state vector index mapping, 15s cache
+- Implemented `conflict_service.py` - GDELT GeoJSON API, coordinate validation, 300s cache
+- Implemented `earthquake_service.py` - USGS GeoJSON feed, full property mapping, 60s cache
+- Implemented `news_service.py` - GDELT DOC API, tone parsing, 120s cache
+- Implemented `stats_service.py` - aggregates counts, earthquake magnitudes, top countries/sources
+- Wired `routers/data.py` - all 5 endpoints call services, return `{"data": [...], "count": N}`
+- Set up APScheduler in `main.py` with 30s interval concurrent fetching via `asyncio.gather`
+- WebSocket broadcasting of update summaries to all connected clients
+- Added `api_health.py` with `/api/health` endpoint to check external API availability
+- Fixed `data_normalizer.py` to support `None` defaults for optional fields
+
+### Notes for downstream agents:
+- **Integration Engineer**: REST: `{"data": [...], "count": N}`, Stats: `{"data": {...}}`. WS broadcasts `{"event_type":"update","data":{...},"timestamp":"..."}`. Run: `cd backend && uvicorn main:app --port 8000`
 
 ---
 
