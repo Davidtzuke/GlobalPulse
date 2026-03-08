@@ -8,6 +8,7 @@ from services.conflict_service import fetch_conflicts
 from services.earthquake_service import fetch_earthquakes
 from services.news_service import fetch_news
 from stats_service import compute_stats
+from api_health import health_monitor, MONITORED_APIS
 
 logger = logging.getLogger(__name__)
 
@@ -51,3 +52,14 @@ async def get_stats():
     news = await fetch_news()
     stats = compute_stats(flights, conflicts, earthquakes, news)
     return {"data": stats.model_dump()}
+
+
+@router.get("/health")
+async def api_health():
+    """Get health status of all external APIs."""
+    for name, url in MONITORED_APIS.items():
+        await health_monitor.check(name, url, timeout=10.0)
+    return {
+        "apis": health_monitor.get_status(),
+        "all_healthy": all(health_monitor.is_healthy(n) for n in MONITORED_APIS),
+    }
